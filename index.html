@@ -1,15 +1,16 @@
  <!DOCTYPE html>
   <html>
     <head>
-      <title>Phone Calls</title>
+      <title>Call List</title>
 	  <meta name="viewport" content="width=device-width, initial-scale=1">
+	  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 	  <style>
 		input {
-			display: block;
-			margin: 10px 5px;
+			margin: 5px 0;
 		}
 		
 		button {
+			margin: 5px 0;
 		}
 	  </style>
     </head>
@@ -17,55 +18,162 @@
       <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
       <script>
 		
-		$(function () {
-			var callContainer = $('#call-links'),
-				phoneContainer = $('#phones'),
-				callClass = 'phone-call';
-			
-			$('#add-phone').on('click', function () {
-				phoneContainer.append('<input onchange="changePhone(this.value)" placeholder="Phone Number" value="" />');
-			});
-			
-			$('#remove-phone').on('click', function () {
-				phoneContainer.children().last().remove();
-			});
-			
-			$('#call').on('click', function () {
-				var phones = phoneContainer.children();
+		$(function () {		
+			$('#btn-add').on('click', function () {
+				var newPhone = { id: _get().length, number: '', isCalled: false };
+				var phones = _get();
+				phones.push(newPhone);
+				_set(phones);
 				
-				if (phones.length > 0) {					
-					var number = phones.first().val();
+				addPhoneToView(newPhone);
+			});
+			
+			$(document).on('click', 'button.btn-remove', function () {
+				$('.btn-remove').prop("disabled", true);
+				
+				var phones = _get();
+				var row = $(this).closest('.row');
+				var id = parseInt(row.find('.phone-number').data('id'), 10);
+				
+				phones.splice(id, 1);
+
+				$.each(phones, function (i, p) {
+					if (p.id > id) {
+						var newId = p.id - 1;
+						$($($('#pRows').find('.row')[p.id]).find(".phone-number")[0]).data("id", newId);
+						p.id = newId;
+					}
+				});
+								
+				row.remove();
+				
+				_set(phones);
+				
+				$('.btn-remove').prop("disabled", false);
+			});
+			
+			$(document).on('change', '.phone-number', function () {
+				$(this).attr("data-number", $(this).val());
+				_update($(this).data('id'), 'number', $(this).val());
+			});
+			
+			$('#btn-call').on('click', function () {
+				var toCall = $('#pRows').find('.phone-number:enabled:visible:first');
+				
+				if (toCall.length > 0) {					
+					var number = $(toCall).val();
 					
-					phones.first().remove();
+					$(toCall).prop("disabled", true);
+					_update($(toCall).data("id"), 'isCalled', true);
 					
-					window.open('tel:' + number, '_self');
+					if (number) {
+						window.open('tel:' + number, '_self');
+					}
 				}
 			});
+			
+			$('#btn-reset').on('click', function () {
+				var rows = $('#pRows input');
+				
+				rows.prop("disabled", false);
+				
+				$.each(rows, function (i, p) {
+					_update($(p).data("id"), 'isCalled', false);
+				});
+			});
+			
+			init();
 		});
 		
-		function changePhone(pn) {
-			if (pn && !isValidPhone(pn)) {
-				alert(pn + " is not a valid phone number and will not be called.");
+		function init() {
+			var curPhones = _get();
+			
+			if (!curPhones || curPhones.length == 0) {
+				_set([]);
+				$('#btn-add').trigger('click');
+			} else {
+				$.each(curPhones, function (i, p) {
+					addPhoneToView(p);
+				});
+			}
+			
+			setNextCall();
+		}
+		
+		function addPhoneToView(phone) {
+			$('#pRows').append($('#phone-template').html());
+			
+			var ele = $('#pRows').find('.phone-number').last();
+			
+			ele.attr("data-id", phone.id);
+			ele.attr("data-number", phone.number);
+			ele.attr("data-called", phone.isCalled);
+			
+			if(phone.isCalled) {
+				ele.prop("disabled", true);
+			}
+			
+			ele.attr("value", phone.number);
+		};
+		
+		function setNextCall() {
+			var next = $('#pRows').find('.phone-number:enabled:visible:first');
+			
+			if (next.length > 0) {
+				$('#btn-call').prop('disabled', false);
+				
+				$('#nextCall').text($(next).val() ? '(' + $(next).val() + ')' : '');
+			} else {
+				$('#nextCall').text('');
+				$('#btn-call').prop('disabled', true);
 			}
 		}
 		
-		function isValidPhone(pn) {
-		  var regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
-		  
-		  return pn.match(regex);
+		function _get() {
+			return JSON.parse(window.sessionStorage.getItem('phones'));
+		}
+		
+		function _set(phones) {
+			window.sessionStorage.setItem('phones', JSON.stringify(phones));
+			
+			setNextCall()
+		}
+		
+		function _update(id, prop, val) {
+			var phones = JSON.parse(window.sessionStorage.getItem('phones'));
+			
+			phones[id][prop] = val;
+			
+			window.sessionStorage.setItem('phones', JSON.stringify(phones));
+			
+			setNextCall()
 		}
       </script>
 	  
-	  <button id="add-phone">ADD</button>
-	  <button id="remove-phone">REMOVE</button>
+	  <div class="container">
 	  
-	  <div id="phones">
-		<input onchange="changePhone(this.value)" placeholder="Phone Number" value="4172995947" />
-		<input onchange="changePhone(this.value)" placeholder="Phone Number" value="4172995947" />
-		<input onchange="changePhone(this.value)" placeholder="Phone Number" value="4172995947" />
+		<div class="row">
+			<div class="col-sm">
+				<button id="btn-add" class="btn btn-success" style="margin-right: 10px;">Add Phone</button>
+				<button id="btn-reset" class="btn btn-secondary" style="margin-right: 10px;">Reset Calls</button>
+				<button id="btn-call" class="btn btn-primary">Next Call <span id="nextCall"></span></button>
+			</div>
+		</div>
+		
+		<div id="pRows"></div>
+		  
+	    <script id="phone-template" type="text/x-custom-template">
+			<div class="row">
+				<div class="col-10 col-sm-10 col-md-4">
+					<input type="tel" class="phone-number form-control form-control-sm" placeholder="Phone Number" value="" />
+				</div>
+				<div class="col-2 col-sm-2 col-md-8">
+					<button class="btn btn-sm btn-danger btn-remove">Remove</button>
+				</div>
+			</div>
+		</script>
+		  
 	  </div>
-	  
-	  <button id="call">NEXT CALL</button>
     </body>
   </html>
   
