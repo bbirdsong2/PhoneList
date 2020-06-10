@@ -1,0 +1,71 @@
+ <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Phone Calls</title>
+	  <meta name="viewport" content="width=device-width, initial-scale=1">
+	  <style>
+		input {
+			display: block;
+			margin: 10px 5px;
+		}
+		
+		button {
+		}
+	  </style>
+    </head>
+    <body>
+      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+      <script>
+		
+		$(function () {
+			var callContainer = $('#call-links'),
+				phoneContainer = $('#phones'),
+				callClass = 'phone-call';
+			
+			$('#add-phone').on('click', function () {
+				phoneContainer.append('<input onchange="changePhone(this.value)" placeholder="Phone Number" value="" />');
+			});
+			
+			$('#remove-phone').on('click', function () {
+				phoneContainer.children().last().remove();
+			});
+			
+			$('#call').on('click', function () {
+				var phones = phoneContainer.children();
+				
+				if (phones.length > 0) {					
+					var number = phones.first().val();
+					
+					phones.first().remove();
+					
+					window.open('tel:' + number, '_self');
+				}
+			});
+		});
+		
+		function changePhone(pn) {
+			if (pn && !isValidPhone(pn)) {
+				alert(pn + " is not a valid phone number and will not be called.");
+			}
+		}
+		
+		function isValidPhone(pn) {
+		  var regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+		  
+		  return pn.match(regex);
+		}
+      </script>
+	  
+	  <button id="add-phone">ADD</button>
+	  <button id="remove-phone">REMOVE</button>
+	  
+	  <div id="phones">
+		<input onchange="changePhone(this.value)" placeholder="Phone Number" value="4172995947" />
+		<input onchange="changePhone(this.value)" placeholder="Phone Number" value="4172995947" />
+		<input onchange="changePhone(this.value)" placeholder="Phone Number" value="4172995947" />
+	  </div>
+	  
+	  <button id="call">NEXT CALL</button>
+    </body>
+  </html>
+  
