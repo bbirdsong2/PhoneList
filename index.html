@@ -57,14 +57,22 @@
 				_update($(this).data('id'), 'number', $(this).val());
 			});
 			
+			$('#btn-skip').on('click', function () {
+				var skip = $('#pRows').find('.phone-number:enabled:visible:first');
+				if (skip.length > 0) {
+					skip.prop("disabled", true);
+					_update(skip.data('id'), 'isCalled', true);
+				}
+			});
+			
 			$('#btn-call').on('click', function () {
 				var toCall = $('#pRows').find('.phone-number:enabled:visible:first');
 				
 				if (toCall.length > 0) {					
-					var number = $(toCall).val();
+					var number = toCall.val();
 					
-					$(toCall).prop("disabled", true);
-					_update($(toCall).data("id"), 'isCalled', true);
+					toCall.prop("disabled", true);
+					_update(toCall.data("id"), 'isCalled', true);
 					
 					if (number) {
 						window.open('tel:' + number, '_self');
@@ -156,7 +164,8 @@
 			<div class="col-sm">
 				<button id="btn-add" class="btn btn-success" style="margin-right: 10px;">Add</button>
 				<button id="btn-reset" class="btn btn-secondary" style="margin-right: 10px;">Reset</button>
-				<button id="btn-call" class="btn btn-primary">Call <span id="nextCall"></span></button>
+				<button id="btn-skip" class="btn btn-secondary" style="margin-right: 10px;">Skip</button>
+				<button id="btn-call" class="btn btn-lg btn-primary">Call <span id="nextCall"></span></button>
 			</div>
 		</div>
 		
